@@ -33,7 +33,7 @@ jobs:
     - name: 📦 Build and Push Docker Image
       run: |
         IMAGE_URI="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG"
-        docker buildx build -t $IMAGE_URI .
+        docker docker buildx build --platform linux/amd64 -t $IMAGE_URI .
         docker push $IMAGE_URI
 
     - name: 🛠️ Install kubectl and eksctl
