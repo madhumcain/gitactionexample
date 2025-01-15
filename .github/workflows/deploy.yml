@@ -18,6 +18,13 @@ jobs:
     - name: 🛠️ Checkout Repository
       uses: actions/checkout@v3
 
+    - name: 🛠️ Set Up AWS CLI
+      run: |
+        brew install awscli
+        aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws configure set region $AWS_REGION
+
     - name: 🛠️ Authenticate Docker with Amazon ECR
       run: |
         aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com
