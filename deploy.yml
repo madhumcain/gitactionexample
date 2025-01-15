@@ -1,0 +1,44 @@
+name: Deploy to EKS from Mac
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: macos-latest  # Use macOS runner
+
+    env:
+      AWS_REGION: "us-east-1"
+      ECR_REPOSITORY: "my-app"
+      IMAGE_TAG: "latest"
+
+    steps:
+    - name: 🛠️ Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: 🛠️ Authenticate Docker with Amazon ECR
+      run: |
+        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com
+
+    - name: 📦 Build and Push Docker Image
+      run: |
+        IMAGE_URI="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG"
+        docker build -t $IMAGE_URI .
+        docker push $IMAGE_URI
+
+    - name: 🛠️ Install kubectl and eksctl
+      run: |
+        brew install kubectl eksctl
+        aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }} --region $AWS_REGION
+
+    - name: 🛠️ Deploy to Amazon EKS
+      run: |
+        kubectl apply -f k8s/deployment.yaml
+        kubectl apply -f k8s/service.yaml
+
+    - name: ✅ Verify Deployment
+      run: |
+        kubectl get pods -o wide
+        kubectl get svc
